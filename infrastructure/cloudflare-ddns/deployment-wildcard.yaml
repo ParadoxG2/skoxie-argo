@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflare-ddns-wildcard
+  namespace: cloudflare-ddns
+  labels:
+    app: cloudflare-ddns-wildcard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflare-ddns-wildcard
+  template:
+    metadata:
+      labels:
+        app: cloudflare-ddns-wildcard
+    spec:
+      containers:
+        - name: cloudflare-ddns-wildcard
+          image: oznu/cloudflare-ddns:latest
+          imagePullPolicy: Always
+          env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-ddns-secret
+                  key: CLOUDFLARE_API_TOKEN
+            - name: ZONE
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-ddns-secret
+                  key: ZONE_NAME
+            - name: SUBDOMAIN
+              value: "*"
+            - name: PROXIED
+              value: "false"
+            - name: RRTYPE
+              value: "A"
+            - name: DELETE_ON_STOP
+              value: "false"
+            - name: INTERFACE
+              value: "eth0"
+            - name: CUSTOM_LOOKUP_CMD
+              value: ""
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "50m"

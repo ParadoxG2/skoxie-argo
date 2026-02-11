@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pangolin
+  namespace: pangolin
+  labels:
+    app: pangolin
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pangolin
+  template:
+    metadata:
+      labels:
+        app: pangolin
+    spec:
+      containers:
+        - name: pangolin
+          # Note: Using Traefik ForwardAuth as Pangolin-like solution
+          # You can replace this with actual Pangolin image if available
+          image: thomseddon/traefik-forward-auth:2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4181
+              name: http
+          env:
+            - name: DEFAULT_PROVIDER
+              value: "generic-oauth"
+            - name: PROVIDERS_GENERIC_OAUTH_AUTH_URL
+              value: ""  # Configure your OAuth provider
+            - name: PROVIDERS_GENERIC_OAUTH_TOKEN_URL
+              value: ""  # Configure your OAuth provider
+            - name: PROVIDERS_GENERIC_OAUTH_USER_URL
+              value: ""  # Configure your OAuth provider
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pangolin-secret
+                  key: SESSION_SECRET
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: pangolin-secret
+                  key: OAUTH_CLIENT_ID
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pangolin-secret
+                  key: OAUTH_CLIENT_SECRET
+            - name: COOKIE_DOMAIN
+              value: "woxie.xyz"
+            - name: AUTH_HOST
+              value: "auth.woxie.xyz"
+            - name: INSECURE_COOKIE
+              value: "false"
+            - name: LOG_LEVEL
+              value: "info"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+      volumes:
+        - name: config
+          configMap:
+            name: pangolin-config

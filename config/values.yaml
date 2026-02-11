@@ -1,0 +1,54 @@
+# Global Configuration for woxie.xyz infrastructure
+# Edit these values to customize your deployment
+
+domain: woxie.xyz
+
+# Cloudflare Configuration
+cloudflare:
+  # Get your API token from https://dash.cloudflare.com/profile/api-tokens
+  apiToken: "YOUR_CLOUDFLARE_API_TOKEN"  # Replace with your actual token
+  email: "YOUR_EMAIL@example.com"        # Replace with your Cloudflare email
+
+# Traefik Configuration
+traefik:
+  # Dashboard access
+  dashboard:
+    enabled: true
+    subdomain: traefik
+    # Will be accessible at: traefik.woxie.xyz
+  
+  # Load balancer IP (if using MetalLB or similar)
+  loadBalancerIP: ""
+
+# cert-manager Configuration
+certManager:
+  email: "YOUR_EMAIL@example.com"  # Replace with your email for Let's Encrypt
+  issuer:
+    production: true  # Set to false for staging Let's Encrypt
+
+# Pangolin (Authentication) Configuration
+pangolin:
+  enabled: true
+  subdomain: auth
+  # Will be accessible at: auth.woxie.xyz
+  
+  # OAuth configuration (optional)
+  oauth:
+    clientId: ""
+    clientSecret: ""
+
+# Cloudflare DDNS Updater Configuration
+ddns:
+  enabled: true
+  # Update interval in seconds
+  interval: 300
+  # Records to update (automatically uses woxie.xyz and *.woxie.xyz)
+  records:
+    - woxie.xyz
+    - "*.woxie.xyz"
+
+# ArgoCD Configuration
+argocd:
+  namespace: argocd
+  # Server will be available at: argocd.woxie.xyz
+  subdomain: argocd

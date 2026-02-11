@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pangolin-config
+  namespace: pangolin
+data:
+  config.yaml: |
+    # Pangolin Authentication Configuration
+    domain: woxie.xyz
+    
+    # Session configuration
+    session:
+      secret: "CHANGE_THIS_SECRET_KEY"  # Generate a secure random key
+      duration: 24h
+      
+    # Cookie configuration
+    cookie:
+      name: _pangolin_session
+      domain: .woxie.xyz
+      secure: true
+      httpOnly: true
+      
+    # Providers (example configuration)
+    providers:
+      # Add your authentication providers here
+      # Example: Google, GitHub, GitLab, etc.
+      
+    # Whitelist (bypass authentication for these paths)
+    whitelist:
+      - /health
+      - /ping
