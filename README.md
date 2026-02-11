@@ -294,6 +294,8 @@ kubectl logs -n cloudflare-ddns -l app=cloudflare-ddns -f
 
 ## 📚 Documentation
 
+- [Authentik Setup Guide](AUTHENTIK-SETUP.md) - Complete guide for configuring Authentik
+- [Authentik Quick Reference](AUTHENTIK-QUICKREF.md) - Common commands and tasks
 - [Traefik Documentation](https://doc.traefik.io/traefik/)
 - [cert-manager Documentation](https://cert-manager.io/docs/)
 - [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
