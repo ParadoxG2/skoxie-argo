@@ -1,0 +1,205 @@
+# Tdarr - Transcoding Server
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tdarr-server-config
+  namespace: media-apps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tdarr-transcode-cache
+  namespace: media-apps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tdarr-server
+  namespace: media-apps
+  labels:
+    app: tdarr-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tdarr-server
+  template:
+    metadata:
+      labels:
+        app: tdarr-server
+    spec:
+      containers:
+        - name: tdarr
+          image: ghcr.io/haveagitgat/tdarr:latest
+          ports:
+            - containerPort: 8265
+              name: http
+            - containerPort: 8266
+              name: server
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "America/New_York"
+            - name: serverIP
+              value: "0.0.0.0"
+            - name: serverPort
+              value: "8266"
+            - name: webUIPort
+              value: "8265"
+          volumeMounts:
+            - name: config
+              mountPath: /app/server
+            - name: transcode-cache
+              mountPath: /temp
+            - name: movies
+              mountPath: /media/movies
+            - name: tv
+              mountPath: /media/tv
+            - name: music
+              mountPath: /media/music
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: tdarr-server-config
+        - name: transcode-cache
+          persistentVolumeClaim:
+            claimName: tdarr-transcode-cache
+        - name: movies
+          persistentVolumeClaim:
+            claimName: media-movies
+        - name: tv
+          persistentVolumeClaim:
+            claimName: media-tv
+        - name: music
+          persistentVolumeClaim:
+            claimName: media-music
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tdarr-server
+  namespace: media-apps
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8265
+      targetPort: 8265
+      protocol: TCP
+      name: http
+    - port: 8266
+      targetPort: 8266
+      protocol: TCP
+      name: server
+  selector:
+    app: tdarr-server
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: tdarr
+  namespace: media-apps
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`tdarr.woxie.xyz`)
+      kind: Rule
+      middlewares:
+        - name: pangolin-auth
+          namespace: pangolin
+      services:
+        - name: tdarr-server
+          port: 8265
+  tls:
+    certResolver: cloudflare
+    domains:
+      - main: woxie.xyz
+        sans:
+          - "*.woxie.xyz"
+---
+# Tdarr Node - Worker for transcoding
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tdarr-node
+  namespace: media-apps
+  labels:
+    app: tdarr-node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tdarr-node
+  template:
+    metadata:
+      labels:
+        app: tdarr-node
+    spec:
+      containers:
+        - name: tdarr-node
+          image: ghcr.io/haveagitgat/tdarr_node:latest
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "America/New_York"
+            - name: serverIP
+              value: "tdarr-server"
+            - name: serverPort
+              value: "8266"
+            - name: nodeID
+              value: "node1"
+          volumeMounts:
+            - name: transcode-cache
+              mountPath: /temp
+            - name: movies
+              mountPath: /media/movies
+            - name: tv
+              mountPath: /media/tv
+            - name: music
+              mountPath: /media/music
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "4000m"
+      volumes:
+        - name: transcode-cache
+          persistentVolumeClaim:
+            claimName: tdarr-transcode-cache
+        - name: movies
+          persistentVolumeClaim:
+            claimName: media-movies
+        - name: tv
+          persistentVolumeClaim:
+            claimName: media-tv
+        - name: music
+          persistentVolumeClaim:
+            claimName: media-music
