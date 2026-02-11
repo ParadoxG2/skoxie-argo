@@ -1,0 +1,111 @@
+# slskd - Soulseek Daemon
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: slskd-config
+  namespace: media-apps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slskd
+  namespace: media-apps
+  labels:
+    app: slskd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: slskd
+  template:
+    metadata:
+      labels:
+        app: slskd
+    spec:
+      containers:
+        - name: slskd
+          image: slskd/slskd:latest
+          ports:
+            - containerPort: 5030
+              name: http
+            - containerPort: 5031
+              name: https
+          env:
+            - name: SLSKD_HTTP_PORT
+              value: "5030"
+            - name: SLSKD_HTTPS_PORT
+              value: "5031"
+            - name: SLSKD_SLSK_LISTEN_PORT
+              value: "50300"
+            - name: TZ
+              value: "America/New_York"
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+            - name: downloads
+              mountPath: /var/slskd/downloads
+            - name: music
+              mountPath: /var/slskd/music
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: slskd-config
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: media-downloads
+        - name: music
+          persistentVolumeClaim:
+            claimName: media-music
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slskd
+  namespace: media-apps
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5030
+      targetPort: 5030
+      protocol: TCP
+      name: http
+  selector:
+    app: slskd
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: slskd
+  namespace: media-apps
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`slskd.woxie.xyz`)
+      kind: Rule
+      middlewares:
+        - name: pangolin-auth
+          namespace: pangolin
+      services:
+        - name: slskd
+          port: 5030
+  tls:
+    certResolver: cloudflare
+    domains:
+      - main: woxie.xyz
+        sans:
+          - "*.woxie.xyz"

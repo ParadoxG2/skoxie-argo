@@ -4,6 +4,7 @@ A production-ready ArgoCD repository for managing Kubernetes applications with T
 
 ## 🚀 Features
 
+### Core Infrastructure
 - **ArgoCD** - GitOps continuous delivery
 - **Traefik** - Modern HTTP reverse proxy and load balancer
 - **cert-manager** - Automated SSL/TLS certificate management with Let's Encrypt
@@ -11,6 +12,20 @@ A production-ready ArgoCD repository for managing Kubernetes applications with T
 - **Authentik Authentication** - Modern identity provider with SSO and forward authentication
 - **Easy Configuration** - Simple YAML-based configuration
 - **Auto-Sync** - Automated deployment of changes
+
+### Media Stack (Full arr-stack)
+- **Prowlarr** - Indexer manager for automation apps
+- **Sonarr** - TV show automation and management
+- **Radarr** - Movie automation and management
+- **Lidarr** - Music automation and management
+- **Readarr** - Book/audiobook automation and management
+- **Bazarr** - Subtitle management
+- **Jellyfin** - Media streaming server
+- **slskd** - Soulseek daemon for P2P sharing
+- **Tdarr** - Automated media transcoding
+- **Nextcloud** - Personal cloud storage
+
+All media services are secured with Authentik authentication via Traefik.
 
 ## 📋 Prerequisites
 
@@ -111,11 +126,24 @@ Expected applications:
 
 Once DNS has propagated, you can access:
 
+#### Infrastructure Services
 - **Traefik Dashboard**: https://traefik.woxie.xyz
 - **ArgoCD UI**: https://argocd.woxie.xyz (configure IngressRoute for ArgoCD)
 - **Authentik (Identity Provider)**: https://auth.woxie.xyz
 - **Example Whoami App**: https://whoami.woxie.xyz
 - **Example Hello World**: https://hello.woxie.xyz
+
+#### Media Stack Services (secured with Authentik)
+- **Prowlarr**: https://prowlarr.woxie.xyz
+- **Sonarr**: https://sonarr.woxie.xyz
+- **Radarr**: https://radarr.woxie.xyz
+- **Lidarr**: https://lidarr.woxie.xyz
+- **Readarr**: https://readarr.woxie.xyz
+- **Bazarr**: https://bazarr.woxie.xyz
+- **Jellyfin**: https://jellyfin.woxie.xyz
+- **slskd**: https://slskd.woxie.xyz
+- **Tdarr**: https://tdarr.woxie.xyz
+- **Nextcloud**: https://nextcloud.woxie.xyz
 
 ## 📁 Repository Structure
 
@@ -130,13 +158,25 @@ Once DNS has propagated, you can access:
 │   ├── cloudflare-ddns-app.yaml
 │   ├── authentik-app.yaml    # Authentik identity provider
 │   ├── pangolin-app.yaml     # Legacy middleware reference
+│   ├── media-apps.yaml       # Media stack application
 │   └── apps.yaml             # Example apps
 ├── infrastructure/
 │   ├── traefik/              # Traefik ingress controller
 │   ├── cert-manager/         # SSL certificate management
 │   ├── cloudflare-ddns/      # DDNS updater
 │   ├── authentik/            # Authentik identity provider
-│   └── pangolin/             # Authentication middleware (uses Authentik)
+│   ├── pangolin/             # Authentication middleware (uses Authentik)
+│   └── media-apps/           # Complete media automation stack
+│       ├── prowlarr.yaml     # Indexer manager
+│       ├── sonarr.yaml       # TV shows
+│       ├── radarr.yaml       # Movies
+│       ├── lidarr.yaml       # Music
+│       ├── readarr.yaml      # Books
+│       ├── bazarr.yaml       # Subtitles
+│       ├── jellyfin.yaml     # Media server
+│       ├── slskd.yaml        # Soulseek daemon
+│       ├── tdarr.yaml        # Transcoding
+│       └── nextcloud.yaml    # Cloud storage
 └── apps/
     ├── whoami-app.yaml       # Example: Whoami application
     └── hello-world-app.yaml  # Example: Hello World app
@@ -296,10 +336,32 @@ kubectl logs -n cloudflare-ddns -l app=cloudflare-ddns -f
 
 - [Authentik Setup Guide](AUTHENTIK-SETUP.md) - Complete guide for configuring Authentik
 - [Authentik Quick Reference](AUTHENTIK-QUICKREF.md) - Common commands and tasks
+- [Media Stack Guide](infrastructure/media-apps/README.md) - Complete guide for the media automation stack
 - [Traefik Documentation](https://doc.traefik.io/traefik/)
 - [cert-manager Documentation](https://cert-manager.io/docs/)
 - [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
 - [Cloudflare API Documentation](https://developers.cloudflare.com/api/)
+
+## 🎬 Media Stack Setup
+
+The repository includes a complete media automation stack with all services secured by Authentik authentication:
+
+**Services Included:**
+- Prowlarr (indexer manager) + Full arr-stack (Sonarr, Radarr, Lidarr, Readarr, Bazarr)
+- Jellyfin (media streaming)
+- slskd (Soulseek daemon)
+- Tdarr (transcoding)
+- Nextcloud (cloud storage)
+
+**Quick Start:**
+
+1. Update Nextcloud secrets in `infrastructure/media-apps/nextcloud.yaml`
+2. The media stack will be automatically deployed via ArgoCD
+3. Configure Authentik authentication (see [AUTHENTIK-SETUP.md](AUTHENTIK-SETUP.md))
+4. Access services at `<service>.woxie.xyz`
+5. Follow the [Media Stack Guide](infrastructure/media-apps/README.md) for detailed setup instructions
+
+All media services share storage volumes for efficient space usage and seamless integration.
 
 ## 🤝 Contributing
 
@@ -317,9 +379,12 @@ This project is open source and available under the MIT License.
 
 1. Configure your Cloudflare API credentials
 2. Update email addresses in configuration files
-3. Deploy the root application
-4. Add your own applications
-5. Enjoy automated GitOps deployments!
+3. Update Nextcloud database passwords in `infrastructure/media-apps/nextcloud.yaml`
+4. Deploy the root application
+5. Configure Authentik for authentication
+6. Set up your media stack (see [Media Stack Guide](infrastructure/media-apps/README.md))
+7. Add your own applications
+8. Enjoy automated GitOps deployments!
 
 ---
 
