@@ -1,0 +1,2 @@
+# skoxie-argo
+argocd
