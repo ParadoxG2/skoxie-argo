@@ -1,0 +1,18 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: authentik
+  namespace: authentik
+  labels:
+    app: authentik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`auth.woxie.xyz`)
+      kind: Rule
+      services:
+        - name: authentik-server
+          port: 9000
+  tls:
+    certResolver: cloudflare
