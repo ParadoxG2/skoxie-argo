@@ -445,6 +445,33 @@ Quick start:
 
 In this context, Pangolin refers to an authentication gateway (ForwardAuth). We're using traefik-forward-auth as the implementation for authentication middleware.
 
+### What's Authentik?
+
+Authentik is an open-source identity provider that provides:
+- Single Sign-On (SSO) with OAuth2, OIDC, and SAML
+- User management and directory
+- Multi-Factor Authentication (MFA)
+- Forward authentication for Traefik
+- Integration with external providers (Google, GitHub, etc.)
+
+See [AUTHENTIK-GUIDE.md](AUTHENTIK-GUIDE.md) for implementation details.
+
+### Should I use Pangolin or Authentik?
+
+**Use Pangolin if:**
+- You need simple authentication
+- You have an external OAuth provider
+- You want minimal resource usage
+- You don't need user management
+
+**Use Authentik if:**
+- You need SSO across multiple apps
+- You want built-in user management
+- You need MFA
+- You want group-based access control
+- You need SAML for enterprise SSO
+- You want a complete identity solution
+
 ### Why ArgoCD?
 
 ArgoCD provides:

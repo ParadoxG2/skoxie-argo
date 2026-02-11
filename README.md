@@ -1,6 +1,6 @@
 # Skoxie ArgoCD - General Purpose GitOps Repository
 
-A production-ready ArgoCD repository for managing Kubernetes applications with Traefik ingress, cert-manager for SSL certificates, Cloudflare DDNS integration, and Pangolin authentication.
+A production-ready ArgoCD repository for managing Kubernetes applications with Traefik ingress, cert-manager for SSL certificates, Cloudflare DDNS integration, and authentication options (Pangolin/Authentik).
 
 ## 🚀 Features
 
@@ -9,6 +9,7 @@ A production-ready ArgoCD repository for managing Kubernetes applications with T
 - **cert-manager** - Automated SSL/TLS certificate management with Let's Encrypt
 - **Cloudflare DDNS** - Automatic DNS updates for woxie.xyz domain
 - **Pangolin Authentication** - Forward authentication middleware for securing apps
+- **Authentik Support** - Modern identity provider with SSO, MFA, and OAuth2/SAML (see [AUTHENTIK-GUIDE.md](AUTHENTIK-GUIDE.md))
 - **Easy Configuration** - Simple YAML-based configuration
 - **Auto-Sync** - Automated deployment of changes
 
@@ -20,7 +21,7 @@ A production-ready ArgoCD repository for managing Kubernetes applications with T
 4. A Cloudflare account with:
    - Domain: woxie.xyz
    - API Token with DNS edit permissions
-5. (Optional) OAuth provider for Pangolin authentication
+5. (Optional) OAuth provider for Pangolin authentication or deploy Authentik
 
 ## 🔧 Quick Start
 
@@ -184,6 +185,26 @@ spec:
     certResolver: cloudflare
 ```
 
+### Authentik Authentication (Alternative)
+
+For a more feature-rich authentication solution with SSO, MFA, and user management:
+
+1. **Deploy Authentik**:
+   ```bash
+   kubectl apply -f bootstrap/authentik-app.yaml
+   ```
+
+2. **Configure secrets** in `infrastructure/authentik/secret.yaml`
+
+3. **Add authentication** to your apps:
+   ```yaml
+   middlewares:
+     - name: authentik
+       namespace: authentik
+   ```
+
+See [AUTHENTIK-GUIDE.md](AUTHENTIK-GUIDE.md) for complete implementation guide.
+
 ## 📝 Adding New Applications
 
 1. Create application manifests in `apps/` directory
@@ -276,10 +297,18 @@ kubectl logs -n cloudflare-ddns -l app=cloudflare-ddns -f
 
 ## 📚 Documentation
 
+### Core Components
 - [Traefik Documentation](https://doc.traefik.io/traefik/)
 - [cert-manager Documentation](https://cert-manager.io/docs/)
 - [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
 - [Cloudflare API Documentation](https://developers.cloudflare.com/api/)
+
+### Authentication & Guides
+- [AUTHENTIK-GUIDE.md](AUTHENTIK-GUIDE.md) - Complete guide for implementing Authentik SSO
+- [Authentik Documentation](https://goauthentik.io/docs/)
+- [GETTING-STARTED.md](GETTING-STARTED.md) - Quick start guide
+- [SETUP.md](SETUP.md) - Detailed setup instructions
+- [FAQ.md](FAQ.md) - Frequently asked questions
 
 ## 🤝 Contributing
 

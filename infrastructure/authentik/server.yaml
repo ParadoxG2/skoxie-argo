@@ -1,0 +1,169 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentik-server
+  namespace: authentik
+  labels:
+    app: authentik
+    component: server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: authentik
+      component: server
+  template:
+    metadata:
+      labels:
+        app: authentik
+        component: server
+    spec:
+      containers:
+        - name: authentik
+          image: ghcr.io/goauthentik/server:2024.2.0
+          args: ["server"]
+          ports:
+            - name: http
+              containerPort: 9000
+              protocol: TCP
+            - name: https
+              containerPort: 9443
+              protocol: TCP
+            - name: metrics
+              containerPort: 9300
+              protocol: TCP
+          env:
+            # Redis Configuration
+            - name: AUTHENTIK_REDIS__HOST
+              value: "redis.authentik.svc.cluster.local"
+            - name: AUTHENTIK_REDIS__PORT
+              value: "6379"
+            
+            # PostgreSQL Configuration
+            - name: AUTHENTIK_POSTGRESQL__HOST
+              value: "postgresql.authentik.svc.cluster.local"
+            - name: AUTHENTIK_POSTGRESQL__PORT
+              value: "5432"
+            - name: AUTHENTIK_POSTGRESQL__NAME
+              value: "authentik"
+            - name: AUTHENTIK_POSTGRESQL__USER
+              value: "authentik"
+            - name: AUTHENTIK_POSTGRESQL__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: POSTGRES_PASSWORD
+            
+            # Authentik Configuration
+            - name: AUTHENTIK_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: AUTHENTIK_SECRET_KEY
+            - name: AUTHENTIK_BOOTSTRAP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: AUTHENTIK_BOOTSTRAP_PASSWORD
+            - name: AUTHENTIK_BOOTSTRAP_EMAIL
+              value: "admin@woxie.xyz"
+            
+            # External URL Configuration (IMPORTANT!)
+            - name: AUTHENTIK_HOST
+              value: "https://auth.woxie.xyz"
+            - name: AUTHENTIK_INSECURE
+              value: "false"
+            
+            # Logging
+            - name: AUTHENTIK_LOG_LEVEL
+              value: "info"
+            
+            # Email Configuration (optional)
+            - name: AUTHENTIK_EMAIL__HOST
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: AUTHENTIK_EMAIL__HOST
+                  optional: true
+            - name: AUTHENTIK_EMAIL__PORT
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: AUTHENTIK_EMAIL__PORT
+                  optional: true
+            - name: AUTHENTIK_EMAIL__USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: AUTHENTIK_EMAIL__USERNAME
+                  optional: true
+            - name: AUTHENTIK_EMAIL__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: AUTHENTIK_EMAIL__PASSWORD
+                  optional: true
+            - name: AUTHENTIK_EMAIL__FROM
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: AUTHENTIK_EMAIL__FROM
+                  optional: true
+            - name: AUTHENTIK_EMAIL__USE_TLS
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: AUTHENTIK_EMAIL__USE_TLS
+                  optional: true
+          
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          
+          livenessProbe:
+            httpGet:
+              path: /-/health/live/
+              port: 9000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          
+          readinessProbe:
+            httpGet:
+              path: /-/health/ready/
+              port: 9000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentik-server
+  namespace: authentik
+  labels:
+    app: authentik
+    component: server
+spec:
+  selector:
+    app: authentik
+    component: server
+  ports:
+    - name: http
+      port: 9000
+      targetPort: 9000
+      protocol: TCP
+    - name: https
+      port: 9443
+      targetPort: 9443
+      protocol: TCP
+    - name: metrics
+      port: 9300
+      targetPort: 9300
+      protocol: TCP
