@@ -1,5 +1,7 @@
 # Shared Persistent Volume Claims for Media Stack
 # These volumes are shared across multiple services for efficient storage usage
+# Note: Requires a storage class that supports ReadWriteMany (RWX) access mode
+# such as NFS, CephFS, or similar distributed storage
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -8,7 +10,7 @@ metadata:
   namespace: media-apps
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 100Gi
@@ -20,7 +22,7 @@ metadata:
   namespace: media-apps
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 100Gi
@@ -32,7 +34,7 @@ metadata:
   namespace: media-apps
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 100Gi
@@ -44,7 +46,7 @@ metadata:
   namespace: media-apps
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 50Gi
@@ -56,7 +58,7 @@ metadata:
   namespace: media-apps
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 20Gi

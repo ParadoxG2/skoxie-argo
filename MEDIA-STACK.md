@@ -78,11 +78,13 @@ All services use:
 ## Storage Architecture
 
 ### Shared Volumes
-- `media-downloads` (100Gi) - Shared by all *arr apps and slskd
-- `media-movies` (100Gi) - Shared by Radarr, Jellyfin, Bazarr, Tdarr
-- `media-tv` (100Gi) - Shared by Sonarr, Jellyfin, Bazarr, Tdarr
-- `media-music` (50Gi) - Shared by Lidarr, Jellyfin, slskd, Tdarr
-- `media-books` (20Gi) - Shared by Readarr, Jellyfin
+- `media-downloads` (100Gi) - Shared by all *arr apps and slskd (ReadWriteMany)
+- `media-movies` (100Gi) - Shared by Radarr, Jellyfin, Bazarr, Tdarr (ReadWriteMany)
+- `media-tv` (100Gi) - Shared by Sonarr, Jellyfin, Bazarr, Tdarr (ReadWriteMany)
+- `media-music` (50Gi) - Shared by Lidarr, Jellyfin, slskd, Tdarr (ReadWriteMany)
+- `media-books` (20Gi) - Shared by Readarr, Jellyfin (ReadWriteMany)
+
+**Note**: Shared volumes require a StorageClass with ReadWriteMany (RWX) support (NFS, CephFS, etc.)
 
 ### Individual Volumes
 - Per-service config volumes (1-2Gi each)
@@ -91,7 +93,7 @@ All services use:
 - Nextcloud data and database (55Gi total)
 
 ### Total Storage Required
-Approximately **500GB+** of persistent storage
+Approximately **500GB+** of persistent storage with RWX support for shared media
 
 ## Resource Requirements
 
@@ -139,9 +141,10 @@ infrastructure/media-apps/
 
 Before deploying, ensure you have:
 
+- [ ] **Verified cluster has ReadWriteMany (RWX) storage support** (NFS, CephFS, etc.)
 - [ ] Configured Cloudflare API token in infrastructure secrets
 - [ ] Configured Authentik bootstrap credentials
-- [ ] **Updated Nextcloud database passwords** in `infrastructure/media-apps/nextcloud.yaml`
+- [ ] **Updated Nextcloud database passwords** in `infrastructure/media-apps/nextcloud.yaml` (search for CHANGEME)
 - [ ] Verified cluster has sufficient storage capacity (500GB+)
 - [ ] Verified cluster has sufficient compute resources
 - [ ] Reviewed and adjusted resource limits if needed

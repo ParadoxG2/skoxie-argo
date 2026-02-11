@@ -24,6 +24,10 @@ spec:
     requests:
       storage: 5Gi
 ---
+# SECURITY WARNING: Update these credentials before deployment!
+# These are placeholder values and MUST be changed to secure passwords.
+# Generate secure passwords with: openssl rand -base64 32
+# DO NOT deploy with these default values!
 apiVersion: v1
 kind: Secret
 metadata:
@@ -31,11 +35,11 @@ metadata:
   namespace: media-apps
 type: Opaque
 stringData:
-  POSTGRES_PASSWORD: "CHANGEME_SECURE_PASSWORD"
+  POSTGRES_PASSWORD: "CHANGEME_SECURE_PASSWORD"  # REQUIRED: Change before deployment
   POSTGRES_USER: "nextcloud"
   POSTGRES_DB: "nextcloud"
   NEXTCLOUD_ADMIN_USER: "admin"
-  NEXTCLOUD_ADMIN_PASSWORD: "CHANGEME_ADMIN_PASSWORD"
+  NEXTCLOUD_ADMIN_PASSWORD: "CHANGEME_ADMIN_PASSWORD"  # REQUIRED: Change before deployment
 ---
 # PostgreSQL Database for Nextcloud
 apiVersion: apps/v1

@@ -36,6 +36,18 @@ The stack uses shared persistent volumes for efficient storage:
 - `nextcloud-data` (50Gi) - Nextcloud files and apps
 - `nextcloud-db` (5Gi) - PostgreSQL database for Nextcloud
 
+### Storage Requirements
+
+**IMPORTANT**: Shared media volumes (media-downloads, media-movies, media-tv, media-music, media-books) use **ReadWriteMany (RWX)** access mode since they are mounted by multiple pods simultaneously. 
+
+Your Kubernetes cluster must have a StorageClass that supports RWX, such as:
+- NFS
+- CephFS
+- GlusterFS
+- Cloud provider shared storage (EFS, Azure Files, GCP Filestore)
+
+If your cluster only supports ReadWriteOnce (RWO), pods may fail to schedule. Consider setting up NFS or using a different storage solution.
+
 ## 🔐 Security
 
 All services are protected by Authentik authentication via the `pangolin-auth` middleware. Users must authenticate through Authentik at auth.woxie.xyz before accessing any media service.
