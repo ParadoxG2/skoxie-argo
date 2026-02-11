@@ -1,0 +1,120 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik-helm
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: traefik
+    repoURL: https://traefik.github.io/charts
+    targetRevision: 26.0.0
+    helm:
+      releaseName: traefik
+      values: |
+        deployment:
+          kind: Deployment
+          replicas: 1
+        
+        service:
+          type: LoadBalancer
+          annotations:
+            # Add your load balancer annotations here
+        
+        ports:
+          web:
+            port: 80
+            expose: true
+            exposedPort: 80
+          websecure:
+            port: 443
+            expose: true
+            exposedPort: 443
+            http3:
+              enabled: true
+            tls:
+              enabled: true
+          traefik:
+            port: 9000
+            expose: false
+        
+        ingressRoute:
+          dashboard:
+            enabled: true
+            matchRule: Host(`traefik.woxie.xyz`)
+            entryPoints: ["websecure"]
+        
+        # Enable logs
+        logs:
+          general:
+            level: INFO
+          access:
+            enabled: true
+        
+        # Enable Prometheus metrics
+        metrics:
+          prometheus:
+            enabled: true
+        
+        # Enable TLS
+        tlsOptions:
+          default:
+            minVersion: VersionTLS12
+            cipherSuites:
+              - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+              - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+              - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+              - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        
+        # Providers
+        providers:
+          kubernetesCRD:
+            enabled: true
+            allowCrossNamespace: true
+          kubernetesIngress:
+            enabled: true
+            publishedService:
+              enabled: true
+        
+        # Global arguments
+        globalArguments:
+          - "--global.checknewversion=false"
+          - "--global.sendanonymoususage=false"
+        
+        # Additional arguments
+        additionalArguments:
+          - "--serversTransport.insecureSkipVerify=true"
+          - "--certificatesresolvers.cloudflare.acme.dnschallenge=true"
+          - "--certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare"
+          - "--certificatesresolvers.cloudflare.acme.email=YOUR_EMAIL@example.com"
+          - "--certificatesresolvers.cloudflare.acme.storage=/data/acme.json"
+        
+        # Persistence for ACME certificates
+        persistence:
+          enabled: true
+          name: traefik-cert-storage
+          size: 128Mi
+          path: /data
+          accessMode: ReadWriteOnce
+        
+        # Environment variables for Cloudflare DNS
+        env:
+          - name: CF_API_EMAIL
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-credentials
+                key: email
+          - name: CF_DNS_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-credentials
+                key: apiToken
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

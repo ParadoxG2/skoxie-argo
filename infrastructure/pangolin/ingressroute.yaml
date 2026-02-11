@@ -1,0 +1,20 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: pangolin
+  namespace: pangolin
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`auth.woxie.xyz`)
+      kind: Rule
+      services:
+        - name: pangolin
+          port: 4181
+  tls:
+    certResolver: cloudflare
+    domains:
+      - main: woxie.xyz
+        sans:
+          - "*.woxie.xyz"

@@ -1,0 +1,10 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: pangolin-auth
+  namespace: pangolin
+spec:
+  forwardAuth:
+    address: http://pangolin.pangolin.svc.cluster.local:4181
+    authResponseHeaders:
+      - X-Forwarded-User

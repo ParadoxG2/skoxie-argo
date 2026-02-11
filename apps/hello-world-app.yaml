@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world
+  namespace: demo-apps
+  labels:
+    app: hello-world
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-world
+  template:
+    metadata:
+      labels:
+        app: hello-world
+    spec:
+      containers:
+        - name: hello-world
+          image: nginxdemos/hello:latest
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "50m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-world
+  namespace: demo-apps
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    app: hello-world
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: hello-world
+  namespace: demo-apps
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`hello.woxie.xyz`)
+      kind: Rule
+      services:
+        - name: hello-world
+          port: 80
+  tls:
+    certResolver: cloudflare
+    domains:
+      - main: woxie.xyz
+        sans:
+          - "*.woxie.xyz"

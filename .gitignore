@@ -1,0 +1,24 @@
+# Ignore temporary files
+*.tmp
+*.log
+/tmp/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Don't commit actual secrets (keep templates only)
+# secrets.env
+# *.key
+# *.pem
+
+# Ignore local testing
+/test/
+/local/

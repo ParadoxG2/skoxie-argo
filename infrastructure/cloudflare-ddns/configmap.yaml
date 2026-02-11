@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflare-ddns-config
+  namespace: cloudflare-ddns
+data:
+  config.yaml: |
+    # Cloudflare DDNS Configuration
+    domains:
+      - woxie.xyz
+      - "*.woxie.xyz"
+    
+    # Check interval in seconds
+    interval: 300
+    
+    # IP detection methods
+    ipv4: true
+    ipv6: false
+    
+    # Detection services
+    detection:
+      - https://api.ipify.org
+      - https://icanhazip.com
