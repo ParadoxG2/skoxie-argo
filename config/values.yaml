@@ -27,6 +27,7 @@ certManager:
     production: true  # Set to false for staging Let's Encrypt
 
 # Pangolin (Authentication) Configuration
+# Now using Authentik as the identity provider
 pangolin:
   enabled: true
   subdomain: auth
@@ -36,6 +37,22 @@ pangolin:
   oauth:
     clientId: ""
     clientSecret: ""
+
+# Authentik (Identity Provider) Configuration
+authentik:
+  enabled: true
+  subdomain: auth
+  # Will be accessible at: auth.woxie.xyz
+  
+  # Database configuration
+  postgresql:
+    enabled: true
+    storage: 5Gi
+  
+  # Redis cache configuration
+  redis:
+    enabled: true
+    storage: 1Gi
 
 # Cloudflare DDNS Updater Configuration
 ddns:

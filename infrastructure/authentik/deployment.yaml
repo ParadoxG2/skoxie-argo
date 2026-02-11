@@ -1,0 +1,184 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentik-server
+  namespace: authentik
+  labels:
+    app: authentik-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentik-server
+  template:
+    metadata:
+      labels:
+        app: authentik-server
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z authentik-postgresql 5432; do
+                echo "Waiting for PostgreSQL..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready!"
+        - name: authentik-migrate
+          image: ghcr.io/goauthentik/server:2024.2.2
+          command:
+            - ak
+            - migrate
+          env:
+            - name: AUTHENTIK_REDIS__HOST
+              value: authentik-redis
+            - name: AUTHENTIK_POSTGRESQL__HOST
+              value: authentik-postgresql
+            - name: AUTHENTIK_POSTGRESQL__USER
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: POSTGRES_USER
+            - name: AUTHENTIK_POSTGRESQL__NAME
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: POSTGRES_DB
+            - name: AUTHENTIK_POSTGRESQL__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: POSTGRES_PASSWORD
+            - name: AUTHENTIK_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: AUTHENTIK_SECRET_KEY
+      containers:
+        - name: authentik
+          image: ghcr.io/goauthentik/server:2024.2.2
+          command:
+            - ak
+            - server
+          ports:
+            - containerPort: 9000
+              name: http
+            - containerPort: 9443
+              name: https
+          env:
+            - name: AUTHENTIK_REDIS__HOST
+              value: authentik-redis
+            - name: AUTHENTIK_POSTGRESQL__HOST
+              value: authentik-postgresql
+            - name: AUTHENTIK_POSTGRESQL__USER
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: POSTGRES_USER
+            - name: AUTHENTIK_POSTGRESQL__NAME
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: POSTGRES_DB
+            - name: AUTHENTIK_POSTGRESQL__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: POSTGRES_PASSWORD
+            - name: AUTHENTIK_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: AUTHENTIK_SECRET_KEY
+            - name: AUTHENTIK_ERROR_REPORTING__ENABLED
+              value: "false"
+            - name: AUTHENTIK_LOG_LEVEL
+              value: info
+            - name: AUTHENTIK_COOKIE_DOMAIN
+              value: woxie.xyz
+            - name: AUTHENTIK_DISABLE_STARTUP_ANALYTICS
+              value: "true"
+            - name: AUTHENTIK_AVATARS
+              value: gravatar
+          livenessProbe:
+            httpGet:
+              path: /-/health/live/
+              port: 9000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /-/health/ready/
+              port: 9000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentik-worker
+  namespace: authentik
+  labels:
+    app: authentik-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentik-worker
+  template:
+    metadata:
+      labels:
+        app: authentik-worker
+    spec:
+      containers:
+        - name: authentik-worker
+          image: ghcr.io/goauthentik/server:2024.2.2
+          command:
+            - ak
+            - worker
+          env:
+            - name: AUTHENTIK_REDIS__HOST
+              value: authentik-redis
+            - name: AUTHENTIK_POSTGRESQL__HOST
+              value: authentik-postgresql
+            - name: AUTHENTIK_POSTGRESQL__USER
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: POSTGRES_USER
+            - name: AUTHENTIK_POSTGRESQL__NAME
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: POSTGRES_DB
+            - name: AUTHENTIK_POSTGRESQL__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: POSTGRES_PASSWORD
+            - name: AUTHENTIK_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret
+                  key: AUTHENTIK_SECRET_KEY
+            - name: AUTHENTIK_ERROR_REPORTING__ENABLED
+              value: "false"
+            - name: AUTHENTIK_LOG_LEVEL
+              value: info
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

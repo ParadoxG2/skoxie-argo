@@ -1,8 +1,8 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: pangolin-auth
-  namespace: pangolin
+  name: authentik-forwardauth
+  namespace: authentik
 spec:
   forwardAuth:
     address: http://authentik-server.authentik.svc.cluster.local:9000/outpost.goauthentik.io/auth/traefik
