@@ -200,6 +200,8 @@ After deployment, access Authentik at https://auth.woxie.xyz and complete the in
 
 For detailed Authentik configuration, visit: https://goauthentik.io/docs/
 
+**📖 See [AUTHENTIK-SETUP.md](AUTHENTIK-SETUP.md) for a complete setup guide.**
+
 ## 📝 Adding New Applications
 
 1. Create application manifests in `apps/` directory
