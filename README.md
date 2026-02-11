@@ -8,7 +8,7 @@ A production-ready ArgoCD repository for managing Kubernetes applications with T
 - **Traefik** - Modern HTTP reverse proxy and load balancer
 - **cert-manager** - Automated SSL/TLS certificate management with Let's Encrypt
 - **Cloudflare DDNS** - Automatic DNS updates for woxie.xyz domain
-- **Pangolin Authentication** - Forward authentication middleware for securing apps
+- **Authentik Authentication** - Modern identity provider with SSO and forward authentication
 - **Easy Configuration** - Simple YAML-based configuration
 - **Auto-Sync** - Automated deployment of changes
 
@@ -74,12 +74,13 @@ stringData:
   CLOUDFLARE_API_TOKEN: "YOUR_CLOUDFLARE_API_TOKEN"
 ```
 
-#### infrastructure/pangolin/secret.yaml
+#### infrastructure/authentik/secret.yaml
 ```yaml
 stringData:
-  SESSION_SECRET: "GENERATE_A_SECURE_RANDOM_STRING"
-  OAUTH_CLIENT_ID: "YOUR_OAUTH_CLIENT_ID"
-  OAUTH_CLIENT_SECRET: "YOUR_OAUTH_CLIENT_SECRET"
+  POSTGRES_PASSWORD: "GENERATE_A_SECURE_RANDOM_STRING"
+  AUTHENTIK_SECRET_KEY: "GENERATE_A_SECURE_RANDOM_STRING"
+  AUTHENTIK_BOOTSTRAP_PASSWORD: "GENERATE_A_SECURE_PASSWORD"
+  AUTHENTIK_BOOTSTRAP_TOKEN: "GENERATE_A_SECURE_TOKEN"
 ```
 
 ### 3. Deploy the Root Application
@@ -102,7 +103,8 @@ Expected applications:
 - traefik
 - cert-manager
 - cloudflare-ddns
-- pangolin
+- authentik
+- pangolin (middleware only)
 - example-apps
 
 ### 5. Access Services
@@ -111,7 +113,7 @@ Once DNS has propagated, you can access:
 
 - **Traefik Dashboard**: https://traefik.woxie.xyz
 - **ArgoCD UI**: https://argocd.woxie.xyz (configure IngressRoute for ArgoCD)
-- **Pangolin Auth**: https://auth.woxie.xyz
+- **Authentik (Identity Provider)**: https://auth.woxie.xyz
 - **Example Whoami App**: https://whoami.woxie.xyz
 - **Example Hello World**: https://hello.woxie.xyz
 
@@ -126,13 +128,15 @@ Once DNS has propagated, you can access:
 │   ├── traefik-app.yaml      # Traefik ArgoCD application
 │   ├── cert-manager-app.yaml # cert-manager ArgoCD application
 │   ├── cloudflare-ddns-app.yaml
-│   ├── pangolin-app.yaml
+│   ├── authentik-app.yaml    # Authentik identity provider
+│   ├── pangolin-app.yaml     # Legacy middleware reference
 │   └── apps.yaml             # Example apps
 ├── infrastructure/
 │   ├── traefik/              # Traefik ingress controller
 │   ├── cert-manager/         # SSL certificate management
 │   ├── cloudflare-ddns/      # DDNS updater
-│   └── pangolin/             # Authentication gateway
+│   ├── authentik/            # Authentik identity provider
+│   └── pangolin/             # Authentication middleware (uses Authentik)
 └── apps/
     ├── whoami-app.yaml       # Example: Whoami application
     └── hello-world-app.yaml  # Example: Hello World app
@@ -159,9 +163,9 @@ issuerRef:
   name: letsencrypt-staging  # Changed from letsencrypt-production
 ```
 
-### Pangolin Authentication
+### Authentik Authentication
 
-To enable authentication on your apps, add the middleware to your IngressRoute:
+Authentik is a modern identity provider (IdP) that provides SSO, OAuth2, SAML, and forward authentication. To enable authentication on your apps, add the middleware to your IngressRoute:
 
 ```yaml
 apiVersion: traefik.containo.us/v1alpha1
@@ -183,6 +187,20 @@ spec:
   tls:
     certResolver: cloudflare
 ```
+
+#### Initial Authentik Setup
+
+After deployment, access Authentik at https://auth.woxie.xyz and complete the initial setup:
+
+1. Use the bootstrap credentials from `infrastructure/authentik/secret.yaml`
+2. Create your first admin user
+3. Configure applications and providers
+4. Set up authentication flows
+5. Configure forward authentication for Traefik
+
+For detailed Authentik configuration, visit: https://goauthentik.io/docs/
+
+**📖 See [AUTHENTIK-SETUP.md](AUTHENTIK-SETUP.md) for a complete setup guide.**
 
 ## 📝 Adding New Applications
 
@@ -276,6 +294,8 @@ kubectl logs -n cloudflare-ddns -l app=cloudflare-ddns -f
 
 ## 📚 Documentation
 
+- [Authentik Setup Guide](AUTHENTIK-SETUP.md) - Complete guide for configuring Authentik
+- [Authentik Quick Reference](AUTHENTIK-QUICKREF.md) - Common commands and tasks
 - [Traefik Documentation](https://doc.traefik.io/traefik/)
 - [cert-manager Documentation](https://cert-manager.io/docs/)
 - [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
